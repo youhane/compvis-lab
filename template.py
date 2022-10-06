@@ -1,9 +1,6 @@
-from distutils import filelist
-import pathlib
 import cv2 as cv
 import os 
 import numpy as np
-import math
 from matplotlib import pyplot as plt
 
 def get_path_list(root_path):
@@ -52,12 +49,9 @@ def get_class_id(root_path, train_names):
         for file in sorted(files):
             if file.endswith('jpg'):
                 listImages.append(os.path.join(root, file))
-                # listClasses.append(os.path.basename(root))
                 listClasses.append(train_names.index(os.path.basename(root)))
         
     return listImages, listClasses
-
-
 
 
 def detect_faces_and_filter(image_list, image_classes_list=None):
@@ -97,7 +91,6 @@ def detect_faces_and_filter(image_list, image_classes_list=None):
                 if image_classes_list:
                     filtered_image_classes_list.append(image_classes_list[i])
     return filtered_cropped_images, filtered_faces_rects, filtered_image_classes_list
-
 
 def train(train_face_grays, image_classes_list):
     '''
@@ -191,14 +184,16 @@ def draw_prediction_results(predict_results, test_image_list, test_faces_rects, 
 
         if predict_results[i][0] == 4:
             cv.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
-            cv.putText(img, train_names[predict_results[i][0]], (x, y-10), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv.putText(img, "SUSPECT", (x, y-10), cv.FONT_HERSHEY_SIMPLEX, .75, (0, 0, 255), 2)
+            cv.putText(img, "Name: " + train_names[predict_results[i][0]].split(' ')[2] + " " + train_names[predict_results[i][0]].split(' ')[3], (0, 230), cv.FONT_HERSHEY_SIMPLEX, .55, (0, 0, 255), 2)
+            cv.putText(img, "Origin: " + train_names[predict_results[i][0]].split(' ')[5] + " " + train_names[predict_results[i][0]].split(' ')[6], (0, 260), cv.FONT_HERSHEY_SIMPLEX, .55, (0, 0, 255), 2)
+            cv.putText(img, "DOB: " + train_names[predict_results[i][0]].split(' ')[8] + " " + train_names[predict_results[i][0]].split(' ')[9] + train_names[predict_results[i][0]].split(' ')[10], (0, 290), cv.FONT_HERSHEY_SIMPLEX, .55, (0, 0, 255), 2)
         else:
             cv.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
             cv.putText(img, "NOT A SUSPECT: " + train_names[predict_results[i][0]], (x, y-10), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         images_with_result.append(img)
     return images_with_result
-
 
 def combine_and_show_result(image_list):
     '''
@@ -217,7 +212,6 @@ def combine_and_show_result(image_list):
         plt.xticks([])
         plt.yticks([])
     plt.show()
-
 
 '''
 You may modify the code below if it's marked between
