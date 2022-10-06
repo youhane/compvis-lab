@@ -5,6 +5,10 @@ import math
 from matplotlib import pyplot as plt
 
 def get_path_list(root_path):
+    path_list = []
+    for path in os.listdir(root_path):
+        path_list.append(path)
+    return path_list
     '''
         To get a list of path directories from root path
 
@@ -21,6 +25,13 @@ def get_path_list(root_path):
     '''
 
 def get_class_id(root_path, train_names):
+    train_image_list = []
+    image_classes_list = []
+    for train_name in train_names:
+        train_path = os.path.join(root_path, train_name)
+        train_image_list.extend(get_path_list(train_path))
+        image_classes_list.extend([train_names.index(train_name)] * len(get_path_list(train_path)))
+    return train_image_list, image_classes_list, 
     '''
         To get a list of train images and a list of image classes id
 
@@ -40,6 +51,17 @@ def get_class_id(root_path, train_names):
 
 
 def detect_faces_and_filter(image_list, image_classes_list=None):
+    faces = []
+    faces_classes = []
+    haar_cascade = cv.CascadeClassifier('haar_face.xml')    
+    for image in image_list:
+        gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+        faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6)
+        for (x, y, w, h) in faces_rect:
+            faces.append(image[y:y+h, x:x+w])
+            if image_classes_list is not None:
+                faces_classes.append(image_classes_list[image_list.index(image)])
+    return faces, faces_classes
     '''
         To detect a face from given image list and filter it if the face on
         the given image is less than one
@@ -79,6 +101,10 @@ def train(train_face_grays, image_classes_list):
     '''
 
 def get_test_images_data(test_root_path):
+    path_list = []
+    for path in os.listdir(test_root_path):
+        path_list.append(path)
+    return path_list
     '''
         To load a list of test images from given path list
 
@@ -175,7 +201,7 @@ if __name__ == "__main__":
     train_names = get_path_list(train_root_path) #labels_list
     train_image_list, image_classes_list = get_class_id(train_root_path, train_names) #faces, indexes
     train_face_grays, _, filtered_classes_list = detect_faces_and_filter(train_image_list, image_classes_list)
-    recognizer = train(train_face_grays, filtered_classes_list)
+    # recognizer = train(train_face_grays, filtered_classes_list)
 
     '''
         Please modify train_root_path value according to the location of
@@ -192,9 +218,9 @@ if __name__ == "__main__":
         -------------------
     '''
 
-    test_image_list = get_test_images_data(test_root_path)
-    test_faces_gray, test_faces_rects, _ = detect_faces_and_filter(test_image_list)
-    predict_results = predict(recognizer, test_faces_gray)
-    predicted_test_image_list = draw_prediction_results(predict_results, test_image_list, test_faces_rects, train_names)
+    # test_image_list = get_test_images_data(test_root_path)
+    # test_faces_gray, test_faces_rects, _ = detect_faces_and_filter(test_image_list)
+    # predict_results = predict(recognizer, test_faces_gray)
+    # predicted_test_image_list = draw_prediction_results(predict_results, test_image_list, test_faces_rects, train_names)
     
-    combine_and_show_result(predicted_test_image_list)
+    # combine_and_show_result(predicted_test_image_list)
