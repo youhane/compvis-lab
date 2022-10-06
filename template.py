@@ -1,4 +1,5 @@
 from distutils import filelist
+import pathlib
 import cv2 as cv
 import os 
 import numpy as np
@@ -22,7 +23,9 @@ def get_path_list(root_path):
     '''
     path_list = []
     for path in os.listdir(root_path):
-        path_list.append(path)
+        if(not path.startswith('.')):
+            path_list.append(path)
+    path_list.sort()
     return path_list
 
 def get_class_id(root_path, train_names):
@@ -46,7 +49,7 @@ def get_class_id(root_path, train_names):
     listClasses = []
 
     for root, _, files in os.walk(root_path):
-        for file in files:
+        for file in sorted(files):
             if file.endswith('jpg'):
                 listImages.append(os.path.join(root, file))
                 # listClasses.append(os.path.basename(root))
@@ -81,7 +84,7 @@ def detect_faces_and_filter(image_list, image_classes_list=None):
     filtered_cropped_images = []
     filtered_faces_rects = []
     filtered_image_classes_list = []
-    face_cascade = cv.CascadeClassifier('haar_face.xml')
+    face_cascade = cv.CascadeClassifier('haarcascades/haarcascade_frontalface_default.xml')
     
     for i, image in enumerate(image_list):
         img = cv.imread(image)
@@ -133,7 +136,7 @@ def get_test_images_data(test_root_path):
     path_list = []
     root, _, files = next(os.walk(test_root_path))
 
-    for file in files:
+    for file in sorted(files):
         if file.endswith('jpg'):
             path_list.append(os.path.join(root, file))
 
@@ -155,7 +158,6 @@ def predict(recognizer, test_faces_gray):
         list
             List containing all prediction results from given test faces
     '''
-    print(test_faces_gray)
     predict_results = []
     for face in test_faces_gray:
         predict_results.append(recognizer.predict(face))
@@ -246,10 +248,5 @@ if __name__ == "__main__":
     test_image_list = get_test_images_data(test_root_path)
     test_faces_gray, test_faces_rects, _ = detect_faces_and_filter(test_image_list)
     predict_results = predict(recognizer, test_faces_gray)
-
-    print(test_image_list)
-    print(test_faces_gray)
-    print(predict_results)
-    
     predicted_test_image_list = draw_prediction_results(predict_results, test_image_list, test_faces_rects, train_names)
     combine_and_show_result(predicted_test_image_list)
