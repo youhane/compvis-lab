@@ -1,3 +1,4 @@
+from distutils import filelist
 import cv2 as cv
 import os 
 import numpy as np
@@ -48,8 +49,8 @@ def get_class_id(root_path, train_names):
         for file in files:
             if file.endswith('jpg'):
                 listImages.append(os.path.join(root, file))
-                listClasses.append(os.path.basename(root))
-                # listClasses.append(train_names.index(os.path.basename(root)))
+                # listClasses.append(os.path.basename(root))
+                listClasses.append(train_names.index(os.path.basename(root)))
         
     return listImages, listClasses
 
@@ -111,6 +112,9 @@ def train(train_face_grays, image_classes_list):
         object
             Recognizer object after being trained with cropped face images
     '''
+    recognizer = cv.face.LBPHFaceRecognizer_create()
+    recognizer.train(train_face_grays, np.array(image_classes_list))
+    return recognizer
 
 def get_test_images_data(test_root_path):
     '''
@@ -127,8 +131,12 @@ def get_test_images_data(test_root_path):
             List containing all loaded gray test images
     '''
     path_list = []
-    for path in os.listdir(test_root_path):
-        path_list.append(path)
+    root, _, files = next(os.walk(test_root_path))
+
+    for file in files:
+        if file.endswith('jpg'):
+            path_list.append(os.path.join(root, file))
+
     return path_list
     
 def predict(recognizer, test_faces_gray):
@@ -147,6 +155,10 @@ def predict(recognizer, test_faces_gray):
         list
             List containing all prediction results from given test faces
     '''
+    predict_results = []
+    for face in test_faces_gray:
+        predict_results.append(recognizer.predict(face))
+    return predict_results
     
 def draw_prediction_results(predict_results, test_image_list, test_faces_rects, train_names):
     '''
@@ -169,6 +181,12 @@ def draw_prediction_results(predict_results, test_image_list, test_faces_rects, 
             List containing all test images after being drawn with
             final result
     '''
+    for i, image in enumerate(test_image_list):
+        if predict_results[i][1] < 50:
+            cv.putText(image, train_names[predict_results[i][0]], (test_faces_rects[i][0], test_faces_rects[i][1]), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        else:
+            cv.putText(image, 'Unknown', (test_faces_rects[i][0], test_faces_rects[i][1]), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    return test_image_list
 
 def combine_and_show_result(image_list):
     '''
@@ -179,6 +197,10 @@ def combine_and_show_result(image_list):
         image_list : nparray
             Array containing image data
     '''
+    image_list = np.concatenate(image_list, axis=1)
+    cv.imshow('Result', image_list)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
 '''
 You may modify the code below if it's marked between
@@ -213,12 +235,7 @@ if __name__ == "__main__":
     train_names = get_path_list(train_root_path) #labels_list
     train_image_list, image_classes_list = get_class_id(train_root_path, train_names) #faces, indexes
     train_face_grays, _, filtered_classes_list = detect_faces_and_filter(train_image_list, image_classes_list)
-
-    for image in train_face_grays:
-        cv.imshow('img', image)
-        cv.waitKey(0)
-
-    # recognizer = train(train_face_grays, filtered_classes_list)
+    recognizer = train(train_face_grays, filtered_classes_list)
 
     '''
         Please modify train_root_path value according to the location of
@@ -234,10 +251,9 @@ if __name__ == "__main__":
         End of modifiable
         -------------------
     '''
-
-    # test_image_list = get_test_images_data(test_root_path)
-    # test_faces_gray, test_faces_rects, _ = detect_faces_and_filter(test_image_list)
-    # predict_results = predict(recognizer, test_faces_gray)
+    test_image_list = get_test_images_data(test_root_path)
+    test_faces_gray, test_faces_rects, _ = detect_faces_and_filter(test_image_list)
+    predict_results = predict(recognizer, test_faces_gray)
     # predicted_test_image_list = draw_prediction_results(predict_results, test_image_list, test_faces_rects, train_names)
     
     # combine_and_show_result(predicted_test_image_list)
