@@ -184,6 +184,20 @@ def draw_prediction_results(predict_results, test_image_list, test_faces_rects, 
             List containing all test images after being drawn with
             final result
     '''
+    images_with_result = []
+    for i, image in enumerate(test_image_list):
+        img = cv.imread(image)
+        x, y, w, h = test_faces_rects[i]
+
+        if predict_results[i][0] == 4:
+            cv.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
+            cv.putText(img, train_names[predict_results[i][0]], (x, y-10), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        else:
+            cv.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cv.putText(img, "NOT A SUSPECT: " + train_names[predict_results[i][0]], (x, y-10), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        images_with_result.append(img)
+    return images_with_result
 
 
 def combine_and_show_result(image_list):
@@ -195,6 +209,15 @@ def combine_and_show_result(image_list):
         image_list : nparray
             Array containing image data
     '''
+    #draw using plt
+    plt.figure(figsize=(10, 5))
+    for i, image in enumerate(image_list):
+        plt.subplot(2, len(image_list)//2 + 1, i+1)
+        plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
+        plt.xticks([])
+        plt.yticks([])
+    plt.show()
+
 
 '''
 You may modify the code below if it's marked between
