@@ -25,13 +25,13 @@ def get_path_list(root_path):
     '''
 
 def get_class_id(root_path, train_names):
-    train_image_list = []
-    image_classes_list = []
-    for train_name in train_names:
-        train_path = os.path.join(root_path, train_name)
-        train_image_list.extend(get_path_list(train_path))
-        image_classes_list.extend([train_names.index(train_name)] * len(get_path_list(train_path)))
-    return train_image_list, image_classes_list, 
+    # train_image_list = []
+    # image_classes_list = []
+    # for train_name in train_names:
+    #     train_path = os.path.join(root_path, train_name)
+    #     train_image_list.extend(get_path_list(train_path))
+    #     image_classes_list.extend([train_names.index(train_name)] * len(get_path_list(train_path)))
+    # return train_image_list, image_classes_list, 
     '''
         To get a list of train images and a list of image classes id
 
@@ -48,20 +48,22 @@ def get_class_id(root_path, train_names):
         list
             List containing all image classes id
     '''
+    listImages = []
+    listClasses = []
+
+    for root, _, files in os.walk(root_path):
+        for file in files:
+            if file.endswith('jpg'):
+                listImages.append(os.path.join(root, file))
+                listClasses.append(os.path.basename(root))
+                # listClasses.append(train_names.index(os.path.basename(root)))
+        
+    return listImages, listClasses
+
+
 
 
 def detect_faces_and_filter(image_list, image_classes_list=None):
-    faces = []
-    faces_classes = []
-    haar_cascade = cv.CascadeClassifier('haar_face.xml')    
-    for image in image_list:
-        gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6)
-        for (x, y, w, h) in faces_rect:
-            faces.append(image[y:y+h, x:x+w])
-            if image_classes_list is not None:
-                faces_classes.append(image_classes_list[image_list.index(image)])
-    return faces, faces_classes
     '''
         To detect a face from given image list and filter it if the face on
         the given image is less than one
@@ -82,6 +84,36 @@ def detect_faces_and_filter(image_list, image_classes_list=None):
         list
             List containing all filtered image classes id
     '''  
+    filtered_cropped_images = []
+    filtered_faces_rects = []
+    filtered_image_classes_list = []
+    # face_cascade = cv.CascadeClassifier('haar_face.xml')
+    
+    # for i, image in enumerate(image_list):
+    print(image_list[0])
+    img = cv.imread(image_list[0])
+    # gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+    plt.imshow(img, cmap='gray')
+    plt.waitforbuttonpress()
+        # faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        # if len(faces) == 1:
+        #     filtered_cropped_images.append(gray)
+        #     filtered_faces_rects.append(faces)
+        #     if image_classes_list is not None:
+        #         filtered_image_classes_list.append(image_classes_list[i])
+    return filtered_cropped_images, filtered_faces_rects, filtered_image_classes_list
+
+    # haar_cascade = cv.CascadeClassifier('haar_face.xml')    
+    # for image in image_list:
+    #     img = cv.imread(image)
+    #     plt.imshow(img, cmap='gray')
+    #     gray = cv.cvtColor(cv.imdecode(np.fromfile(image, dtype=np.uint8), -1), cv.COLOR_BGR2GRAY)
+    #     faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6)
+    #     for (x, y, w, h) in faces_rect:
+    #         faces.append(image[y:y+h, x:x+w])
+    #         if image_classes_list is not None:
+    #             faces_classes.append(image_classes_list[image_list.index(image)])
+    # return faces, faces_classes
 
 def train(train_face_grays, image_classes_list):
     '''
